@@ -57,18 +57,22 @@ postsStore.fetchSinglePost(route.params.id)
     load.value = false;
   });
 
-useSeoMeta({
-  title: post.value?.title ,
-  ogTitle: post.value?.title,
-  description: post.value?.description,
-  ogDescription: post.value?.description,
-  ogType: 'website',
-  ogImage: '/img/velik.png',
-  ogUrl: `${process.client ? window.location.origin : ''}`,
-  twitterCard: 'summary_large_image',
-  twitterTitle:  post.value?.title,
-  twitterDescription: post.value?.description,
-  twitterImage: '/img/velik.png'
+watch(post, (newPost) => {
+  if (!newPost) return;
+  
+  useSeoMeta({
+    title: newPost.title,
+    ogTitle: newPost.title,
+    description: newPost.description,
+    ogDescription: newPost.description,
+    ogType: 'website',
+    ogImage: '/img/velik.png',
+    ogUrl: process.client ? window.location.href : '',
+    twitterCard: 'summary_large_image',
+    twitterTitle: newPost.title,
+    twitterDescription: newPost.description,
+    twitterImage: '/img/velik.png'
+  });
 });
 </script>
 

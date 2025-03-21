@@ -5,12 +5,6 @@
         Articles
       </h1>
       <div class="grid grid-cols-12 gap-3 mt-[39px] justify-between max-md:gap-[50px] max-sm:gap-2">
-        <span
-          v-if="load"
-          class="my-2"
-        >
-          loading...
-        </span>
         <UICard
           v-for="(post, index) in paginatedItems"
           :id="post.id"
@@ -21,10 +15,9 @@
         />
       </div>
       <UIPagination
-        v-if="!load"
         class="max-sm:scale-[0.7]"
         :total-pages="totalPages"
-        :current-page="data.currentPage"
+        :current-page="currentPage"
         @handle-page-change-next="handlePageChangeNext"
         @handle-page-change-prev="handlePageChangePrev"
         @handle-page-go-first="handlePageGoFirst"
@@ -36,7 +29,6 @@
 </template>
 
 <script setup lang="ts">
-import { usePostsStore } from '@/src/stores/usePostsStore';
 import type { IPost } from '@/src/types/posts';
 
 useSeoMeta({
@@ -54,38 +46,20 @@ useSeoMeta({
 });
 
 
-const postsStore = usePostsStore();
+const { data: posts } = await useAsyncData<IPost[]>('posts', () => $fetch('https://6082e3545dbd2c001757abf5.mockapi.io/qtim-test-work/posts'));
 
-const posts = ref<IPost[]>([]);
-const load = ref<boolean>(true);
-
-postsStore.fetchPosts()
-  .then((res) => {
-    if (Array.isArray(res)) {
-      posts.value = res;
-    }else {
-      posts.value = [];
-    }
-    load.value = false;
-  })
-  .catch((err) => {
-    console.log(err);
-    load.value = false;
-  });
-
-const data = reactive({
-  currentPage: 1,
-  itemsPerPage: 8,
-  screenWidth: 0
-});
+const screenWidth = ref<number>(1);
+const currentPage = ref<number>(1);
+const itemsPerPage = ref<number>(8);
 
 const paginatedItems = computed(() => {
-  const start = (data.currentPage - 1) * data.itemsPerPage;
-  const end = start + data.itemsPerPage;
+  if (!posts.value) return [];
+  const start = (currentPage.value - 1) * itemsPerPage.value;
+  const end = start + itemsPerPage.value;
   return posts.value.slice(start, end);
 });
 
-const totalPages = computed(() => Math.ceil(posts.value.length / data.itemsPerPage));
+const totalPages = computed(() => Math.ceil((posts.value?.length ?? 0) / itemsPerPage.value));
 
 const getItemsPerPageDynamic = (width: number) => {
   if (width >= 1280) {
@@ -100,35 +74,35 @@ const getItemsPerPageDynamic = (width: number) => {
 };
 
 const handleResize = () => {
-  data.screenWidth = window.innerWidth;
+  screenWidth.value = window.innerWidth;
 };
 
 const handlePageChangeNext = () => {
-  data.currentPage = data.currentPage + 1;
+  currentPage.value = currentPage.value + 1;
 };
 
 const handlePageChange = (page: number) => {
-  data.currentPage = page;
+  currentPage .value= page;
 };
 
 const handlePageChangePrev = () => {
-  data.currentPage = data.currentPage - 1;
+  currentPage.value = currentPage.value - 1;
 };
 
 const handlePageGoFirst = () => {
-  data.currentPage = 1;
+  currentPage.value = 1;
 };
 
 const handlePageGoLast = () => {
-  data.currentPage = Math.ceil(posts.value.length / data.itemsPerPage);
+  currentPage.value = Math.ceil((posts.value?.length ?? 0) / itemsPerPage.value);
 };
 
 
 onMounted(() => {
   window.addEventListener('resize', handleResize);
-  data.screenWidth = window.innerWidth;
-  getItemsPerPageDynamic(data.screenWidth);
-  data.itemsPerPage = getItemsPerPageDynamic(data.screenWidth);
+  screenWidth.value = window.innerWidth;
+  getItemsPerPageDynamic(screenWidth.value);
+  itemsPerPage.value = getItemsPerPageDynamic(screenWidth.value);
 });
 
 onBeforeUnmount(() => {

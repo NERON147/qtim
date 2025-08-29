@@ -1,5 +1,7 @@
-export function useNav() {
-  const nav = ref([
+import type { NavItem, UseNavReturn } from '../types/navigation';
+
+export function useNav(): UseNavReturn {
+  const nav = ref<NavItem[]>([
     {
       txt: 'Works',
       link: '/',
